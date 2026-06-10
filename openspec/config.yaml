@@ -1,0 +1,38 @@
+schema: spec-driven
+
+# Project context: used by generators when creating proposals, specs, and tasks
+context: |
+	Tech stack: TypeScript, React 18, Vite, Tailwind CSS, Vitest for testing
+	UI library: lucide-react (icons)
+	Backend: Supabase (Postgres) via `@supabase/supabase-js`
+	DB migrations: supabase/migrations (SQL files with RLS and functions)
+	Tools: TypeScript, Vite, PostCSS, Tailwind, dotenv
+	Conventions:
+		- Use conventional commits (feat/fix/chore/docs/refactor/test)
+		- Open pull requests for all changes; prefer small, focused PRs
+		- Tests: write unit tests with Vitest for new features
+		- Keep frontend code in `src/` (components, lib, styles)
+		- Use `src/` components for UI and `lib/` for integration helpers (auth, supabase)
+
+# Per-artifact rules: guidance for AI-generated artifacts
+rules:
+	proposal:
+		- Keep proposals concise (<= 500 words)
+		- Always include: Summary, Motivation, Non-goals, Risks, and High-level tasks
+	design:
+		- Include UX considerations, API contracts, and accessibility notes
+		- Keep diagrams minimal and focused on flows
+	tasks:
+		- Break work into small tasks (<= 2 hours each when possible)
+		- Include acceptance criteria and estimated effort (S/M/L)
+		- Prefer task granularity that maps to a single PR
+	specs:
+		- Each spec must include: Purpose, API/contract, Acceptance Criteria, Test Cases
+		- For DB changes, reference exact migration file(s) under `supabase/migrations`
+	tests:
+		- Provide at least one Vitest unit or integration test for new behavior
+		- Include instructions to run tests (e.g., `npm run test` or `vitest`)
+
+# Additional guidance for AI authors
+# - Respect existing code structure under `src/` and `lib/`.
+# - When suggesting SQL or migration changes, prefer small, reversible steps.

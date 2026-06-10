@@ -1,0 +1,39 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# Vite / build output
+dist/
+.build/
+
+# Environment files
+.env
+.env.*
+
+# Supabase local files
+supabase/.temp/
+
+# Editor / OS files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# History / local workspace cache
+.history/
+
+# Optional logs
+logs/
+*.log
+
+# Lock files created by npm / package managers
+.pnpm-debug.log
+
+# Generated type output
+#*.d.ts
+
+# Misc
+.idea/

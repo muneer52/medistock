@@ -1,0 +1,68 @@
+# MediStock PWA: Technical Requirement Document
+
+## 1. Project Vision
+A mobile-first Progressive Web App (PWA) for collaborative medical inventory management. 
+**Key Value:** Real-time stock tracking and automated shopping list generation for shared households or clinics.
+
+## 2. Core Tech Stack
+*   **Framework:** React (Vite)
+*   **CSS:** Tailwind CSS (Dark/Light mode support)
+*   **Backend/Auth:** Supabase (PostgreSQL + Google OAuth)
+*   **Storage:** Cloudinary (Unsigned uploads for medicine images)
+*   **Icons:** Lucide-React
+
+## 3. Database Architecture (Supabase)
+| Table | Primary Columns | Purpose |
+| :--- | :--- | :--- |
+| **profiles** | `id, email, full_name, avatar_url` | User metadata linked to Auth. |
+| **inventories** | `id, owner_id (fk), name` | The "Shared Space" container. |
+| **inventory_members** | `inv_id, user_id, status, role` | Join requests and approvals. |
+| **medicines** | `id, inv_id (fk), name, type, mg_ml, quantity, threshold, expiry_date, image_url, notes` | Medicine records. |
+
+## 4. Feature Specifications
+
+### A. Collaboration & Approval Workflow
+*   **Privacy:** Inventories are private until shared via link/ID.
+*   **Gatekeeping:** New members default to `pending` status.
+*   **Access Control:** RLS (Row Level Security) prevents `pending` users from viewing data.
+
+### B. Intelligent Stock Management
+*   **Medicine Input:** Name, Category, Mg/Ml, Expiry, and Low Stock Threshold.
+*   **Visuals:** Cloudinary widget for camera capture/image upload.
+*   **Automated Shopping List:** View for items where `quantity <= threshold`. 
+
+### C. UI/UX Requirements
+*   **Dashboard:** Searchable list with Status Badges:
+    *   🔴 **Red:** Expired/Critical (Stock = 0).
+    *   🟡 **Yellow:** Low Stock (Stock <= Threshold).
+    *   🟢 **Green:** Healthy Stock.
+*   **Themes:** Dark/Light mode persistence via LocalStorage.
+
+## 5. Security & Environment
+*   **Variables:** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_CLOUDINARY_CLOUD_NAME`, `VITE_CLOUDINARY_UPLOAD_PRESET`.
+
+## 6. Implementation Roadmap (The Phased Plan)
+
+### Phase 1: Infrastructure & Auth 
+- [ ] Supabase SQL Schema (Tables + RLS)
+- [ ] Vite + Tailwind + Lucide setup
+- [ ] Google OAuth Integration & Auth Guard
+
+### Phase 2: Collaboration Core
+- [ ] Create/List Inventories
+- [ ] Join Request Logic (Pending/Approved)
+- [ ] Owner's Approval Dashboard
+
+### Phase 3: Medicine Management
+- [ ] Cloudinary Image Upload Setup
+- [ ] Medicine CRUD (Create, Read, Update, Delete)
+- [ ] Search & Filter Functionality
+
+### Phase 4: Stock Intelligence
+- [ ] Status Badge Logic (Red/Yellow/Green)
+- [ ] Automated Shopping List View
+<!-- - [ ] Dark/Light Mode persistence -->
+
+### Phase 5: PWA Deployment
+- [ ] Manifest & Service Worker configuration
+- [ ] "Add to Home Screen" optimization/open
