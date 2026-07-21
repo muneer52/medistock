@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Cloud, Mail, Lock, LogIn, UserPlus, AlertCircle, Loader } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { isStrongPassword } from '../lib/authValidation';
 
 type AuthMode = 'signin' | 'signup' | 'recover';
 
@@ -24,8 +25,12 @@ export function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+
 
   /**
    * Validates email format using regex pattern
@@ -38,12 +43,12 @@ export function SignIn() {
   };
 
   /**
-   * Validates password meets minimum security requirement (8 characters)
+   * Validates password meets a stronger security requirement.
    * @param password - Password string to validate
-   * @returns true if password length is at least 8 characters
+   * @returns true if password length and complexity requirements are met
    */
   const isValidPassword = (password: string): boolean => {
-    return password.length >= 8;
+    return isStrongPassword(password);
   };
 
   /**
@@ -53,8 +58,7 @@ export function SignIn() {
    */
   const getPasswordStrengthColor = (password: string): string => {
     if (!password) return 'text-slate-400';
-    if (password.length < 8) return 'text-red-400';
-    if (password.length < 12) return 'text-yellow-400';
+    if (!isStrongPassword(password)) return 'text-red-400';
     return 'text-green-400';
   };
 
@@ -73,7 +77,7 @@ export function SignIn() {
       return;
     }
     if (!password || !isValidPassword(password)) {
-      setError('Password must be at least 8 characters long');
+      setError('Password must be at least 12 characters and include uppercase, lowercase, a number, and a special character');
       return;
     }
 
@@ -97,6 +101,8 @@ export function SignIn() {
       console.error('Sign up error:', err);
     } finally {
       setLoading(false);
+      setMessage('Confirm your email address. Check your inbox for a confirmation email.')
+      setSuccess(true);
     }
   };
 
@@ -108,6 +114,7 @@ export function SignIn() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess(false);
 
     if (!email.trim() || !password) {
       setError('Please enter email and password');
@@ -139,9 +146,15 @@ export function SignIn() {
    * On success, user is redirected to the app root with active session
    */
   const handleGoogleSignIn = async () => {
+    if (lockoutUntil && Date.now() < lockoutUntil) {
+      setError('Too many authentication attempts. Please try again later.');
+      return;
+    }
+
     setError('');
     setMessage('');
     setLoading(true);
+    setSuccess(false);
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -151,9 +164,15 @@ export function SignIn() {
       });
       if (oauthError) {
         setError('Google sign-in failed. Please try again.');
+        const nextAttempts = failedAttempts + 1;
+        setFailedAttempts(nextAttempts);
+        if (nextAttempts >= 3) {
+          setLockoutUntil(Date.now() + 30000);
+        }
       }
     } catch (err) {
       setError('Google sign-in failed. Please try again.');
+      setFailedAttempts((prev) => prev + 1);
       console.error('Google OAuth error:', err);
     } finally {
       setLoading(false);
@@ -162,8 +181,15 @@ export function SignIn() {
 
   const handlePasswordRecovery = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (lockoutUntil && Date.now() < lockoutUntil) {
+      setError('Too many authentication attempts. Please try again later.');
+      return;
+    }
+
     setError('');
     setMessage('');
+    setSuccess(false);
 
     if (!email.trim() || !isValidEmail(email)) {
       setError('Please enter a valid email address');
@@ -176,12 +202,20 @@ export function SignIn() {
 
       if (recoveryError) {
         console.warn('Password recovery error:', recoveryError);
+        setFailedAttempts((prev) => prev + 1);
+        if (failedAttempts + 1 >= 3) {
+          setLockoutUntil(Date.now() + 30000);
+        }
       }
 
       setMessage(
         'If that email is registered, you will receive a password reset email shortly. Please check your inbox and spam folder.'
       );
     } catch (err) {
+      setFailedAttempts((prev) => prev + 1);
+      if (failedAttempts + 1 >= 3) {
+        setLockoutUntil(Date.now() + 30000);
+      }
       console.error('Password recovery error:', err);
       setError('Unable to send recovery email. Please try again later.');
     } finally {
@@ -193,6 +227,7 @@ export function SignIn() {
     mode === 'signin' ? handleSignIn : mode === 'signup' ? handleSignUp : handlePasswordRecovery;
   const submitButtonText =
     mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Send recovery email';
+  const isLockedOut = lockoutUntil !== null && Date.now() < lockoutUntil;
   const toggleText =
     mode === 'signin'
       ? "Don't have an account? Sign up"
@@ -219,14 +254,20 @@ export function SignIn() {
           <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-cyan-500/15 via-sky-500/10 to-indigo-500/10 blur-3xl"></div>
           {/* Message Display */}
           {message && (
-            <div className="mb-6 rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4 text-cyan-200">
+            <div className={`mb-6 rounded-lg border ${!success? 'border-cyan-500/20 bg-cyan-500/10' : 'border-green-500/20 bg-green-500/10'} p-4 text-cyan-200`}>
               <p className="text-sm">{message}</p>
             </div>
           )}
+
           {error && (
             <div className="mb-6 flex items-start gap-3 rounded-lg border border-red-500/30 bg-red-500/10 p-4">
               <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
+          {isLockedOut && (
+            <div className="mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-200">
+              <p className="text-sm">Too many attempts. Please wait 30 seconds before trying again.</p>
             </div>
           )}
 
@@ -322,7 +363,7 @@ export function SignIn() {
                 </div>
                 {password && (
                   <p className={`text-sm mt-1 ${getPasswordStrengthColor(password)}`}>
-                    {password.length < 8 ? '❌ Min 8 characters' : '✓ Strong password'}
+                    {!isStrongPassword(password) ? '❌ Use 12+ characters with upper/lowercase, number, and special character' : '✓ Strong password'}
                   </p>
                 )}
               </div>
@@ -333,6 +374,7 @@ export function SignIn() {
               type="submit"
               disabled={
                 loading ||
+                isLockedOut ||
                 !email ||
                 !isValidEmail(email) ||
                 (mode !== 'recover' && !password)

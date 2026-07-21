@@ -2,9 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from './supabase';
 import { Inventory } from './inventory';
 
-const adminEmail = import.meta.env.VITE_ADMIN_EMAIL ?? '';
-const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD ?? '';
-
 interface User {
   id: string;
   email?: string;
@@ -38,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check current session and auto-login with admin credentials if configured
+    // Check the current Supabase session without auto-authenticating with any stored credentials.
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session?.user) {
@@ -47,19 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: data.session.user.email,
           user_metadata: data.session.user.user_metadata,
         });
-      } else if (adminEmail && adminPassword) {
-        const { data: signInData, error } = await supabase.auth.signInWithPassword({
-          email: adminEmail,
-          password: adminPassword,
-        });
-
-        if (!error && signInData.session?.user) {
-          setUser({
-            id: signInData.session.user.id,
-            email: signInData.session.user.email,
-            user_metadata: signInData.session.user.user_metadata,
-          });
-        }
       }
       setLoading(false);
     };
