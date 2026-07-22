@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Cloud, Mail, Lock, LogIn, UserPlus, AlertCircle, Loader } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { isStrongPassword } from '../lib/authValidation';
+import { getOAuthErrorMessage } from '../lib/authErrors';
 
 type AuthMode = 'signin' | 'signup' | 'recover';
 
@@ -145,39 +146,39 @@ export function SignIn() {
    * Initiates OAuth flow with Supabase provider
    * On success, user is redirected to the app root with active session
    */
-  const handleGoogleSignIn = async () => {
-    if (lockoutUntil && Date.now() < lockoutUntil) {
-      setError('Too many authentication attempts. Please try again later.');
-      return;
-    }
+  // const handleGoogleSignIn = async () => {
+  //   if (lockoutUntil && Date.now() < lockoutUntil) {
+  //     setError('Too many authentication attempts. Please try again later.');
+  //     return;
+  //   }
 
-    setError('');
-    setMessage('');
-    setLoading(true);
-    setSuccess(false);
-    try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}`,
-        },
-      });
-      if (oauthError) {
-        setError('Google sign-in failed. Please try again.');
-        const nextAttempts = failedAttempts + 1;
-        setFailedAttempts(nextAttempts);
-        if (nextAttempts >= 3) {
-          setLockoutUntil(Date.now() + 30000);
-        }
-      }
-    } catch (err) {
-      setError('Google sign-in failed. Please try again.');
-      setFailedAttempts((prev) => prev + 1);
-      console.error('Google OAuth error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   setError('');
+  //   setMessage('');
+  //   setLoading(true);
+  //   setSuccess(false);
+  //   try {
+  //     const { error: oauthError } = await supabase.auth.signInWithOAuth({
+  //       provider: 'google',
+  //       options: {
+  //         redirectTo: `${window.location.origin}`,
+  //       },
+  //     });
+  //     if (oauthError) {
+  //       setError(getOAuthErrorMessage(oauthError.message));
+  //       const nextAttempts = failedAttempts + 1;
+  //       setFailedAttempts(nextAttempts);
+  //       if (nextAttempts >= 3) {
+  //         setLockoutUntil(Date.now() + 30000);
+  //       }
+  //     }
+  //   } catch (err) {
+  //     setError(getOAuthErrorMessage(err instanceof Error ? err.message : ''));
+  //     setFailedAttempts((prev) => prev + 1);
+  //     console.error('Google OAuth error:', err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handlePasswordRecovery = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -416,14 +417,14 @@ export function SignIn() {
           </form>
 
           {/* Divider */}
-          <div className="flex items-center gap-4 mb-6">
+          {/* <div className="flex items-center gap-4 mb-6">
             <div className="flex-1 border-b border-slate-700"></div>
             <span className="text-sm text-slate-500">or</span>
             <div className="flex-1 border-b border-slate-700"></div>
-          </div>
+          </div> */}
 
           {/* Google OAuth Button */}
-          <button
+          {/* <button
             onClick={handleGoogleSignIn}
             disabled={loading}
             className="w-full border border-slate-700/60 bg-slate-900/95 hover:border-cyan-300 hover:bg-slate-800 text-slate-100 font-medium py-3 rounded-2xl transition-shadow shadow-lg shadow-slate-950/20 disabled:bg-slate-900 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -447,7 +448,7 @@ export function SignIn() {
               />
             </svg>
             <span>Continue with Google</span>
-          </button>
+          </button> */}
 
           {/* Toggle Text */}
           <div className="mt-6 text-center">
