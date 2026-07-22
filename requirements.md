@@ -71,6 +71,11 @@ A simplified, mobile-first inventory tracker for shared medical supplies. Focuse
 - Unified login screen supporting both authentication methods.
 - Password recovery flow so users can request a reset email if they forget their password.
 - Sign-out button in dashboard header for easy session termination.
+- Signed-in users can update their email address from a dedicated account settings page.
+- Signed-in users can change their password from the dedicated account settings page.
+- Password changes require the current password to be entered and validated before the new password can be accepted.
+- Password fields should include a visible/invisible toggle so users can inspect their entry.
+- Account credential updates must provide clear validation, success, and error feedback.
 - Inventory access is driven by join method: invite code grants instant access, inventory ID join requests require owner approval.
 
 ### G. Inventory Ownership and Lifecycle
@@ -86,5 +91,5 @@ A simplified, mobile-first inventory tracker for shared medical supplies. Focuse
 5. **Dashboard:** Status-colored list with quick +/- buttons.
 6. **Shopping:** Filtered "Shopping List" view.
 7. **UI Polish:** Refine inventory detail pages, sign-in experience, and responsive layout for a pro-grade product feel.
-8. **Auth Phase 2:** Email/password registration, sign-in, and sign-out UI.
+8. **Auth Phase 2:** Email/password registration, sign-in, sign-out UI, and account credential updates.
 9. **PWA:** Manifest and Service Worker via `vite-plugin-pwa`.

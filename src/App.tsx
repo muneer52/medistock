@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Cloud, LogOut } from 'lucide-react';
+import { Cloud, LogOut, Settings } from 'lucide-react';
 import { AuthProvider, useAuth } from './lib/auth';
 import { SignIn } from './components/SignIn';
 import { InventoryCreate } from './components/InventoryCreate';
@@ -7,8 +7,9 @@ import { InventoryList } from './components/InventoryList';
 import { InventoryDetailsView } from './components/InventoryDetails';
 import { JoinInventory } from './components/JoinInventory';
 import { ApprovalDashboard } from './components/ApprovalDashboard';
+import { AccountSettings } from './components/AccountSettings';
 
-type PageView = 'dashboard' | 'inventory-details' | 'approval-dashboard';
+type PageView = 'dashboard' | 'inventory-details' | 'approval-dashboard' | 'settings';
 
 function AppContent() {
   const { user, loading, signOut } = useAuth();
@@ -72,14 +73,24 @@ function AppContent() {
               <p className="font-medium text-slate-100">{user?.email ?? 'Guest User'}</p>
               <p>Signed in</p>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-400"
-              title="Sign out from this device"
-            >
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentView('settings')}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-700 bg-slate-900/80 text-cyan-300 transition hover:border-cyan-400 hover:text-cyan-200"
+                title="Open account settings"
+                aria-label="Open account settings"
+              >
+                <Settings className="h-5 w-5" />
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-400"
+                title="Sign out from this device"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -154,6 +165,13 @@ function AppContent() {
           <ApprovalDashboard
             inventoryId={selectedInventoryId}
             onBack={handleBack}
+          />
+        )}
+
+        {currentView === 'settings' && (
+          <AccountSettings
+            currentEmail={user?.email}
+            onBack={() => setCurrentView('dashboard')}
           />
         )}
       </main>
