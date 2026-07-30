@@ -4,9 +4,12 @@ import {
   listMedicines,
   deleteMedicine,
   updateMedicine,
+  getPopularMedicineSuggestions,
+  filterMedicineSuggestions,
   Medicine,
 } from "../lib/inventory";
 import MedicineForm from "./MedicineForm";
+import MedicineNameAutocomplete from "./MedicineNameAutocomplete";
 
 interface MedicineListProps {
   inventoryId: string;
@@ -28,6 +31,8 @@ const MedicineList: React.FC<MedicineListProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
+  const [searchValue, setSearchValue] = useState("");
+  const [allMedicines, setAllMedicines] = useState<Medicine[]>([]);
 
   useEffect(() => {
     loadMedicines();
@@ -37,6 +42,7 @@ const MedicineList: React.FC<MedicineListProps> = ({
     try {
       setLoading(true);
       const data = await listMedicines(inventoryId);
+      setAllMedicines(data);
       setMedicines(data);
       setError(null);
     } catch (err) {
@@ -51,7 +57,8 @@ const MedicineList: React.FC<MedicineListProps> = ({
 
     try {
       await deleteMedicine(medicineId);
-      setMedicines(medicines.filter((m) => m.id !== medicineId));
+      setAllMedicines((current) => current.filter((m) => m.id !== medicineId));
+      setMedicines((current) => current.filter((m) => m.id !== medicineId));
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to delete medicine",
@@ -65,7 +72,12 @@ const MedicineList: React.FC<MedicineListProps> = ({
       const updated = await updateMedicine(medicine.id, {
         quantity: newQuantity,
       });
-      setMedicines(medicines.map((m) => (m.id === medicine.id ? updated : m)));
+      setAllMedicines((current) =>
+        current.map((m) => (m.id === medicine.id ? updated : m)),
+      );
+      setMedicines((current) =>
+        current.map((m) => (m.id === medicine.id ? updated : m)),
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to update quantity",
@@ -79,6 +91,23 @@ const MedicineList: React.FC<MedicineListProps> = ({
     await loadMedicines();
   };
 
+  const visibleMedicines = React.useMemo(() => {
+    const normalizedQuery = searchValue.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return allMedicines;
+    }
+
+    return allMedicines.filter((medicine) =>
+      medicine.name.toLowerCase().includes(normalizedQuery),
+    );
+  }, [allMedicines, searchValue]);
+
+  const handleSuggestionFetch = async (query: string) => {
+    const suggestions = await getPopularMedicineSuggestions(query);
+    return filterMedicineSuggestions(query, suggestions);
+  };
+
   if (loading) {
     return (
       <div className="rounded-[1.75rem] border border-slate-700/50 bg-slate-900/80 p-6 text-center text-slate-400 shadow-xl shadow-slate-950/10">
@@ -87,7 +116,6 @@ const MedicineList: React.FC<MedicineListProps> = ({
     );
   }
 
-  console.log("editingMedicine:" + editingMedicine);
   return (
     <div className="space-y-4 rounded-[2rem] border border-slate-700/50 bg-slate-900/80 p-6 shadow-2xl shadow-slate-950/10">
       <div className="flex justify-between items-center">
@@ -107,6 +135,20 @@ const MedicineList: React.FC<MedicineListProps> = ({
         </div>
       )}
 
+      <div className="rounded-2xl border border-slate-700/50 bg-slate-950/60 p-4">
+        <MedicineNameAutocomplete
+          id="inventory-medicine-search"
+          value={searchValue}
+          onChange={setSearchValue}
+          onSelect={(value) => {
+            setSearchValue(value);
+          }}
+          fetchSuggestions={handleSuggestionFetch}
+          label="Search medicines"
+          placeholder="Search by medicine name"
+        />
+      </div>
+
       {showForm && editingMedicine === null && (
         <div className="rounded-2xl border border-slate-700 bg-slate-950/80 p-4">
           <MedicineForm
@@ -121,13 +163,17 @@ const MedicineList: React.FC<MedicineListProps> = ({
         </div>
       )}
 
-      {medicines.length === 0 ? (
+      {allMedicines.length === 0 ? (
         <div className="text-center py-8 text-slate-400">
           <p>No medicines yet. Add one to get started!</p>
         </div>
+      ) : visibleMedicines.length === 0 ? (
+        <div className="text-center py-8 text-slate-400">
+          <p>No medicines match the current search.</p>
+        </div>
       ) : (
         <div className="grid gap-4">
-          {medicines.map((medicine) => (
+          {visibleMedicines.map((medicine) => (
             <div
               key={medicine.id}
               className={`group relative overflow-hidden rounded-[1.75rem] border border-slate-700/40 bg-slate-950/90 p-4 shadow-[0_24px_60px_-40px_rgba(56,189,248,0.35)] transition hover:-translate-y-0.5 ${statusColors[medicine.status || "OK"]}`}

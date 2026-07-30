@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { createMedicine, updateMedicine, Medicine } from '../lib/inventory';
+import { createMedicine, updateMedicine, Medicine, getPopularMedicineSuggestions, filterMedicineSuggestions } from '../lib/inventory';
+import MedicineNameAutocomplete from './MedicineNameAutocomplete';
 
 interface MedicineFormProps {
   inventoryId: string;
@@ -33,6 +34,11 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
       ...prev,
       [name]: type === 'number' ? parseInt(value, 10) : value,
     }));
+  };
+
+  const handleSuggestionFetch = async (query: string) => {
+    const suggestions = await getPopularMedicineSuggestions(query);
+    return filterMedicineSuggestions(query, suggestions);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,17 +91,20 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-        <label htmlFor="name" className="block text-sm font-medium text-slate-200 mb-1">
-          Medicine Name *
-        </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          className="w-full rounded-2xl border border-slate-700/60 bg-slate-900 px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+          <MedicineNameAutocomplete
+            id="medicine-name"
+            name="name"
+            value={formData.name}
+            onChange={(value) => {
+              setFormData(prev => ({ ...prev, name: value }));
+            }}
+            onSelect={(value) => {
+              setFormData(prev => ({ ...prev, name: value }));
+            }}
+            fetchSuggestions={handleSuggestionFetch}
+            label="Medicine Name *"
+            placeholder="Type a medicine name"
+            required
           />
         </div>
 
