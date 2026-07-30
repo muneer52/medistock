@@ -1,5 +1,8 @@
 import { supabase } from './supabase';
 
+const POPULAR_MEDICINE_SUGGESTION_LIMIT = 8;
+const POPULAR_MEDICINE_USER_THRESHOLD = 6;
+
 // Types
 export interface Inventory {
   id: string;
@@ -258,6 +261,52 @@ export async function listMedicines(inv_id: string): Promise<Medicine[]> {
     ...medicine,
     status: calculateMedicineStatus(medicine.quantity, medicine.threshold),
   }));
+}
+
+/**
+ * Filter medicine suggestions locally for a responsive autocomplete experience.
+ */
+export function filterMedicineSuggestions(
+  query: string,
+  suggestions: string[],
+  limit: number = POPULAR_MEDICINE_SUGGESTION_LIMIT,
+): string[] {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  if (!normalizedQuery) return [];
+
+  const matches = suggestions.filter((suggestion) =>
+    suggestion.toLowerCase().includes(normalizedQuery),
+  );
+
+  return matches.slice(0, limit);
+}
+
+/**
+ * Fetch popular medicine names that are used by more than 5 distinct users.
+ */
+export async function getPopularMedicineSuggestions(query: string): Promise<string[]> {
+  const normalizedQuery = query.trim();
+
+  if (!normalizedQuery) return [];
+
+  try {
+    const { data, error } = await supabase.rpc('get_popular_medicine_names', {
+      p_query: normalizedQuery,
+      p_user_threshold: POPULAR_MEDICINE_USER_THRESHOLD,
+      p_limit: POPULAR_MEDICINE_SUGGESTION_LIMIT,
+    });
+
+    if (error) {
+      console.warn('Failed to load medicine suggestions', error.message);
+      return [];
+    }
+
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.warn('Unexpected error while loading medicine suggestions', error);
+    return [];
+  }
 }
 
 /**

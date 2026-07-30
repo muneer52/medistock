@@ -50,6 +50,10 @@ A simplified, mobile-first inventory tracker for shared medical supplies. Focuse
     - **LOW:** `quantity <= threshold` (Yellow)
     - **OK:** `quantity > threshold` (Green)
 - Quick-action buttons: `[ + ]` and `[ - ]` to adjust quantity from the dashboard.
+- Inventory users can search medicines by name inside the inventory module.
+- The search experience includes an autocomplete dropdown that suggests trusted medicine names while the user types.
+- Suggestions are limited to medicine names that appear in the inventories of more than 5 users, improving data quality and reducing duplicate entries.
+- The same autocomplete list is available in the Add New Medicine form so users can reuse common medicine names quickly.
 
 ### C. Automated Shopping List
 - A dedicated view that displays all items where `quantity <= threshold`.
@@ -90,6 +94,7 @@ A simplified, mobile-first inventory tracker for shared medical supplies. Focuse
 4. **Medicines:** Basic CRUD for adding/editing medicine items.
 5. **Dashboard:** Status-colored list with quick +/- buttons.
 6. **Shopping:** Filtered "Shopping List" view.
-7. **UI Polish:** Refine inventory detail pages, sign-in experience, and responsive layout for a pro-grade product feel.
-8. **Auth Phase 2:** Email/password registration, sign-in, sign-out UI, and account credential updates.
-9. **PWA:** Manifest and Service Worker via `vite-plugin-pwa`.
+7. **Search & Autocomplete:** Add inventory medicine search with shared autocomplete suggestions for trusted names across the inventory workflow.
+8. **UI Polish:** Refine inventory detail pages, sign-in experience, and responsive layout for a pro-grade product feel.
+9. **Auth Phase 2:** Email/password registration, sign-in, sign-out UI, and account credential updates.
+10. **PWA:** Manifest and Service Worker via `vite-plugin-pwa`.
